@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
   int n_max;
   int delta;
   int gpus;
-  int* list = NULL;
+  int* list = nullptr;
 
   if (argc < 5) {
     showUsage(argv[0]);

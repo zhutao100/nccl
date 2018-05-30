@@ -30,7 +30,7 @@ NVCC_GENCODE ?= -gencode=arch=compute_35,code=sm_35 \
                 -gencode=arch=compute_61,code=sm_61 \
                 -gencode=arch=compute_60,code=compute_60
 
-CXXFLAGS   := -I$(CUDA_INC) -fPIC -fvisibility=hidden
+CXXFLAGS   := -I$(CUDA_INC) -fPIC -fvisibility=hidden -std=c++11
 NVCUFLAGS  := -ccbin $(CXX) $(NVCC_GENCODE) -lineinfo -std=c++11 -maxrregcount 96
 # Use addprefix so that we can specify more than one path
 LDFLAGS    := $(addprefix -L,${CUDA_LIB}) -lcudart

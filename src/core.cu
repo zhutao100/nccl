@@ -50,7 +50,7 @@ static ncclResult_t shmOpen(const char* shmname, size_t bytes, void** ptr) {
     return ncclSystemError;
   }
 
-  *ptr = mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  *ptr = mmap(nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (*ptr == MAP_FAILED) {
     WARN("failure in mmap");
     shm_unlink(shmname);
@@ -120,7 +120,7 @@ typedef struct {
 static ncclResult_t initGather(RankGather** gather, ncclUniqueId commId,
     int ndev, int rank, RankEntry myInfo) {
   size_t bytes = offsetof(RankGather, ranks) + ndev*sizeof(RankEntry);
-  RankGather* tmp = NULL;
+  RankGather* tmp = nullptr;
   int bar_tmp;
 
   ncclResult_t res = shmOpen(commId.internal, bytes, (void**)&tmp);
@@ -199,14 +199,14 @@ static ncclResult_t allocDevMem(ncclMem** ptr, size_t buffSize) {
   size_t size = offsetof(struct ncclMem, buff) + buffSize;
   cudaError_t res = cudaMalloc((void**)ptr, size);
   if (res != cudaSuccess) {
-    *ptr = NULL;
+    *ptr = nullptr;
     WARN("failed to allocate %lu byte device buffer", size);
     return ncclCudaMallocFailed;
   }
   if (cudaMemset(*ptr, 0, size) != cudaSuccess) {
     WARN("failed to memset device buffer.");
     cudaFree(*ptr);
-    *ptr = NULL;
+    *ptr = nullptr;
     return ncclUnhandledCudaError;
   }
   return ncclSuccess;
@@ -219,7 +219,7 @@ static ncclResult_t allocHostMem(ncclMem** ptr, size_t buffSize) {
   size_t size = offsetof(struct ncclMem, buff) + buffSize;
   cudaError_t res = cudaMallocHost((void**)ptr, size);
   if (res != cudaSuccess) {
-    *ptr = NULL;
+    *ptr = nullptr;
     WARN("failed to allocate %lu byte host buffer", size);
     return ncclSystemError;
   }
@@ -232,7 +232,7 @@ static ncclResult_t openHostMemShm(const char* shmname, ncclMem** ptr, size_t bu
   ncclResult_t res = shmOpen(shmname, size, (void**)ptr);
   if (res != ncclSuccess) {
     WARN("failed to allocate %lu byte shm buffer", size);
-    *ptr = NULL;
+    *ptr = nullptr;
     return res;
   }
 
@@ -240,7 +240,7 @@ static ncclResult_t openHostMemShm(const char* shmname, ncclMem** ptr, size_t bu
     WARN("failed to register host buffer");
     shmUnlink(shmname);
     shmUnmap(*ptr, size);
-    *ptr = NULL;
+    *ptr = nullptr;
     return ncclUnhandledCudaError;
   }
   return ncclSuccess;
@@ -290,7 +290,7 @@ static ncclResult_t commClearMaps(ncclComm_t comm) {
   cudaError_t cures;
 
   for(int d=0; d<comm->nRanks; ++d) {
-    if (comm->ptrs[d].hostCleanup != NULL) {
+    if (comm->ptrs[d].hostCleanup != nullptr) {
       cures = cudaHostUnregister(comm->ptrs[d].hostCleanup);
       if (cures != cudaSuccess) {
         WARN("rank %d failed to unregister handle to device %d",
@@ -303,10 +303,10 @@ static ncclResult_t commClearMaps(ncclComm_t comm) {
           comm->rank, d);
           retval = (retval == ncclSuccess) ? res : retval;
       }
-      comm->ptrs[d].hostCleanup = NULL;
+      comm->ptrs[d].hostCleanup = nullptr;
     }
 
-    if (comm->ptrs[d].devCleanup != NULL) {
+    if (comm->ptrs[d].devCleanup != nullptr) {
       cures = cudaIpcCloseMemHandle((void*)comm->ptrs[d].devCleanup);
       if (cures != cudaSuccess) {
         WARN("rank %d failed to close IPC handle to device %d: %s",
@@ -316,12 +316,12 @@ static ncclResult_t commClearMaps(ncclComm_t comm) {
     }
   }
 
-  if (comm->userFromRing != NULL)
+  if (comm->userFromRing != nullptr)
     memset(comm->userFromRing, 0, sizeof(int)*comm->nRanks);
-  if (comm->ncclFromRing != NULL)
+  if (comm->ncclFromRing != nullptr)
     memset(comm->ncclFromRing, 0, sizeof(int)*comm->nRanks);
 
-  if (comm->devUserFromRing != NULL) {
+  if (comm->devUserFromRing != nullptr) {
     cures = cudaMemset(comm->devUserFromRing, 0, sizeof(int)*comm->nRanks);
     if (cures != cudaSuccess) {
       WARN("Faild to clear dev map: %s", cudaGetErrorString(cures));
@@ -329,7 +329,7 @@ static ncclResult_t commClearMaps(ncclComm_t comm) {
     }
   }
 
-  if (comm->devRing != NULL) {
+  if (comm->devRing != nullptr) {
     cures = cudaMemset(comm->devRing, 0, sizeof(DevRing<char>));
     if (cures != cudaSuccess) {
       WARN("Failed to clear devRing: %s", cudaGetErrorString(cures));
@@ -400,8 +400,8 @@ static ncclResult_t commBuildMaps(ncclComm_t comm, ncclUniqueId* commId, int ran
     ncclMem* remoteHostBuff;
 
     comm->ptrs[i].type = NodeRef::HOST; // Assume host buffer
-    comm->ptrs[i].devCleanup = NULL;
-    comm->ptrs[i].hostCleanup = NULL;
+    comm->ptrs[i].devCleanup = nullptr;
+    comm->ptrs[i].hostCleanup = nullptr;
 
     if (iPid == myPid) {
       remoteHostBuff = ranks[i].hostptr;
@@ -522,7 +522,7 @@ static ncclResult_t commBuildMaps(ncclComm_t comm, ncclUniqueId* commId, int ran
 
 static void initDebug() {
   const char* nccl_debug = getenv("NCCL_DEBUG");
-  if (nccl_debug == NULL) {
+  if (nccl_debug == nullptr) {
     ncclDebugLevel = NONE;
   } else if (strcmp(nccl_debug, "VERSION") == 0) {
     ncclDebugLevel = VERSION;
@@ -538,10 +538,10 @@ static void initDebug() {
 }
 
 static void commFree(ncclComm_t comm) {
-  if (comm == NULL)
+  if (comm == nullptr)
     return;
 
-  if (comm->doneEvent != NULL)
+  if (comm->doneEvent != nullptr)
     if (cudaEventDestroy(comm->doneEvent) != cudaSuccess)
       INFO("ncclComm failed to destroy doneEvent");
 
@@ -549,24 +549,24 @@ static void commFree(ncclComm_t comm) {
   if (res != ncclSuccess)
     INFO("failed to cleanup comm maps");
 
-  if (comm->devRing != NULL)
+  if (comm->devRing != nullptr)
     if (cudaFree(comm->devRing) != cudaSuccess)
       INFO("commFree failed to free devRing");
 
-  if (comm->userFromRing != NULL)
+  if (comm->userFromRing != nullptr)
     free(comm->userFromRing);
 
-  if (comm->devUserFromRing != NULL)
+  if (comm->devUserFromRing != nullptr)
     if (cudaFree(comm->devUserFromRing) != cudaSuccess)
       INFO("commFree failed to free dev maps");
 
-  if (comm->ncclFromRing != NULL)
+  if (comm->ncclFromRing != nullptr)
     free(comm->ncclFromRing);
 
-  if (comm->devMem != NULL && cudaFree(comm->devMem) != cudaSuccess)
+  if (comm->devMem != nullptr && cudaFree(comm->devMem) != cudaSuccess)
     INFO("Failed to free devMap");
 
-  if (comm->hostMem != NULL) {
+  if (comm->hostMem != nullptr) {
     if (comm->hostMemState & ShmMapped) {
       if (cudaHostUnregister(comm->hostMem) != cudaSuccess)
         INFO("Failed to unregister hostMem");
@@ -584,7 +584,7 @@ static void commFree(ncclComm_t comm) {
 static ncclResult_t commAlloc(ncclComm_t* comret, int ndev, const ncclUniqueId* commId, int rank) {
   size_t commBytes = offsetof(ncclComm, ptrs) + ndev*sizeof(NodeRef);
   struct ncclComm* comm = (struct ncclComm*)malloc(commBytes);
-  if (comm == NULL) {
+  if (comm == nullptr) {
     WARN("comm allocation failed");
     return ncclSystemError;
   }
@@ -595,9 +595,9 @@ static ncclResult_t commAlloc(ncclComm_t* comret, int ndev, const ncclUniqueId* 
 
   const char* str = getenv("NCCL_BUFFSIZE");
   int buffsize;
-  if (str != NULL) {
+  if (str != nullptr) {
     errno = 0;
-    buffsize = strtol(str, NULL, 10);
+    buffsize = strtol(str, nullptr, 10);
     if (errno == ERANGE || buffsize == 0) {
       INFO("rank %d invalid NCCL_BUFFSIZE: %s, using default %lu",
           rank, str, DEFAULT_BUFFER_SIZE_BYTES);
@@ -631,14 +631,14 @@ static ncclResult_t commAlloc(ncclComm_t* comret, int ndev, const ncclUniqueId* 
   }
 
   comm->userFromRing = (int*)malloc(ndev*sizeof(int));
-  if (comm->userFromRing == NULL) {
+  if (comm->userFromRing == nullptr) {
     WARN("rank %d failed to allocate host maps", rank);
     commFree(comm);
     return ncclSystemError;
   }
 
   comm->ncclFromRing = (int*)malloc(ndev*sizeof(int));
-  if (comm->ncclFromRing == NULL) {
+  if (comm->ncclFromRing == nullptr) {
     WARN("rank %d failed to allocate host maps", rank);
     commFree(comm);
     return ncclSystemError;
@@ -650,7 +650,7 @@ static ncclResult_t commAlloc(ncclComm_t* comret, int ndev, const ncclUniqueId* 
     return ncclUnhandledCudaError;
   }
 
-  if(commId == NULL) {
+  if(commId == nullptr) {
     comm->hostMemState = 0;
     res = allocHostMem(&comm->hostMem, comm->buffSize);
   } else {
@@ -746,7 +746,7 @@ ncclResult_t ncclCommInitRank(ncclComm_t* newcomm, int ndev, ncclUniqueId commId
   initDebug();
   ncclResult_t res;
   RankEntry myStuff;
-  RankGather* gath = NULL;
+  RankGather* gath = nullptr;
 
   res = wrapSymbols();
   if (res != ncclSuccess) {
@@ -788,7 +788,7 @@ ncclResult_t ncclCommInitRank(ncclComm_t* newcomm, int ndev, ncclUniqueId commId
   INFO("Global device memory space is %s", (*newcomm)->globalMemSpace ? "enabled" : "disabled");
 
   res = closeGather(gath, ndev); // includes a barrier
-  gath = NULL;
+  gath = nullptr;
   if (res != ncclSuccess) {
     WARN("rank %d failed to close gather", myrank);
     goto cleanup;
@@ -804,7 +804,7 @@ ncclResult_t ncclCommInitRank(ncclComm_t* newcomm, int ndev, ncclUniqueId commId
   goto final;
 
   cleanup:
-  if (gath != NULL)
+  if (gath != nullptr)
     closeGather(gath, ndev);
   commFree(*newcomm);
 
@@ -834,9 +834,9 @@ ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
 
   ncclResult_t res;
   int savedDevice;
-  RankEntry* ranks = NULL;
+  RankEntry* ranks = nullptr;
   int rank, cudaDev;
-  ncclComm_t comm = NULL;
+  ncclComm_t comm = nullptr;
   char busId[13];
   nvmlDevice_t nvmlHandle;
   int affinity_set = 0;
@@ -850,7 +850,7 @@ ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
 
   cudaGetDevice(&savedDevice);
   ranks = (RankEntry*)malloc(ndev*sizeof(RankEntry));
-  if (ranks == NULL) {
+  if (ranks == nullptr) {
     WARN("NCCL allocation failed");
     return ncclSystemError;
   }
@@ -863,10 +863,10 @@ ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
   }
 
   for(rank=0; rank<ndev; ++rank)
-    comms[rank] = NULL;
+    comms[rank] = nullptr;
 
   for (rank=0; rank<ndev; ++rank) {
-    cudaDev = (devlist == NULL) ? rank : devlist[rank];
+    cudaDev = (devlist == nullptr) ? rank : devlist[rank];
     if (cudaSetDevice(cudaDev) != cudaSuccess) {
       WARN("rank %d failed to set cuda device %d", rank, cudaDev);
       res = ncclInvalidDeviceIndex;
@@ -890,7 +890,7 @@ ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
     affinity_set = 1;
     skipaffinity:
 
-    res = commAlloc(&comm, ndev, NULL, rank);
+    res = commAlloc(&comm, ndev, nullptr, rank);
     if (res != ncclSuccess) {
       WARN("rank %d failed to allocate communicator", rank);
       goto cleanup;
@@ -911,7 +911,7 @@ ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
   for(rank=0; rank<ndev; ++rank) {
     comm = comms[rank];
     cudaSetDevice(comm->cudaDev);
-    res = commBuildMaps(comm, NULL, rank, ranks, &globalMemSpaceBroke);
+    res = commBuildMaps(comm, nullptr, rank, ranks, &globalMemSpaceBroke);
     if (res != ncclSuccess) {
       WARN("rank %d failed to build comm maps", rank);
       goto cleanup;
@@ -932,15 +932,15 @@ ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
   }
 
   free(ranks);
-  ranks = NULL;
+  ranks = nullptr;
   res = ncclSuccess;
   goto final;
 
   cleanup:
-  if (ranks != NULL)
+  if (ranks != nullptr)
     free(ranks);
   for(rank=0; rank<ndev; ++rank) {
-    if(comms[rank] != NULL) {
+    if(comms[rank] != nullptr) {
       commFree(comms[rank]);
     }
   }
@@ -954,7 +954,7 @@ ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
 
 NCCL_API(void, ncclCommDestroy, ncclComm_t comm);
 void ncclCommDestroy(ncclComm_t comm) {
-  if (comm == NULL)
+  if (comm == nullptr)
     return;
 
   int savedDevice;

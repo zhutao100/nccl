@@ -23,7 +23,7 @@ ncclResult_t wrapSymbols(void) {
   if (symbolsLoaded)
     return ncclSuccess;
 
-  static void* nvmlhandle = NULL;
+  static void* nvmlhandle = nullptr;
   void* tmp;
   void** cast;
 
@@ -39,7 +39,7 @@ ncclResult_t wrapSymbols(void) {
   #define LOAD_SYM(handle, symbol, funcptr) do {         \
     cast = (void**)&funcptr;                             \
     tmp = dlsym(handle, symbol);                         \
-    if (tmp == NULL) {                                   \
+    if (tmp == nullptr) {                                   \
       WARN("dlsym failed on %s - %s", symbol, dlerror());\
       goto teardown;                                     \
     }                                                    \
@@ -58,20 +58,20 @@ ncclResult_t wrapSymbols(void) {
   return ncclSuccess;
 
   teardown:
-  nvmlInternalInit = NULL;
-  nvmlInternalShutdown = NULL;
-  nvmlInternalDeviceGetHandleByPciBusId = NULL;
-  nvmlInternalDeviceGetIndex = NULL;
-  nvmlInternalDeviceSetCpuAffinity = NULL;
-  nvmlInternalDeviceClearCpuAffinity = NULL;
+  nvmlInternalInit = nullptr;
+  nvmlInternalShutdown = nullptr;
+  nvmlInternalDeviceGetHandleByPciBusId = nullptr;
+  nvmlInternalDeviceGetIndex = nullptr;
+  nvmlInternalDeviceSetCpuAffinity = nullptr;
+  nvmlInternalDeviceClearCpuAffinity = nullptr;
 
-  if (nvmlhandle != NULL) dlclose(nvmlhandle);
+  if (nvmlhandle != nullptr) dlclose(nvmlhandle);
   return ncclSystemError;
 }
 
 
 ncclResult_t wrapNvmlInit(void) {
-  if (nvmlInternalInit == NULL) {
+  if (nvmlInternalInit == nullptr) {
     WARN("lib wrapper not initialized.");
     return ncclLibWrapperNotSet;
   }
@@ -85,7 +85,7 @@ ncclResult_t wrapNvmlInit(void) {
 }
 
 ncclResult_t wrapNvmlShutdown(void) {
-  if (nvmlInternalShutdown == NULL) {
+  if (nvmlInternalShutdown == nullptr) {
     WARN("lib wrapper not initialized.");
     return ncclLibWrapperNotSet;
   }
@@ -99,7 +99,7 @@ ncclResult_t wrapNvmlShutdown(void) {
 }
 
 ncclResult_t wrapNvmlDeviceGetHandleByPciBusId(const char* pciBusId, nvmlDevice_t* device) {
-  if (nvmlInternalDeviceGetHandleByPciBusId == NULL) {
+  if (nvmlInternalDeviceGetHandleByPciBusId == nullptr) {
     WARN("lib wrapper not initialized.");
     return ncclLibWrapperNotSet;
   }
@@ -113,7 +113,7 @@ ncclResult_t wrapNvmlDeviceGetHandleByPciBusId(const char* pciBusId, nvmlDevice_
 }
 
 ncclResult_t wrapNvmlDeviceGetIndex(nvmlDevice_t device, unsigned* index) {
-  if (nvmlInternalDeviceGetIndex == NULL) {
+  if (nvmlInternalDeviceGetIndex == nullptr) {
     WARN("lib wrapper not initialized.");
     return ncclLibWrapperNotSet;
   }
@@ -127,7 +127,7 @@ ncclResult_t wrapNvmlDeviceGetIndex(nvmlDevice_t device, unsigned* index) {
 }
 
 ncclResult_t wrapNvmlDeviceSetCpuAffinity(nvmlDevice_t device) {
-  if (nvmlInternalDeviceSetCpuAffinity == NULL) {
+  if (nvmlInternalDeviceSetCpuAffinity == nullptr) {
     WARN("lib wrapper not initialized.");
     return ncclLibWrapperNotSet;
   }
@@ -141,7 +141,7 @@ ncclResult_t wrapNvmlDeviceSetCpuAffinity(nvmlDevice_t device) {
 }
 
 ncclResult_t wrapNvmlDeviceClearCpuAffinity(nvmlDevice_t device) {
-  if (nvmlInternalInit == NULL) {
+  if (nvmlInternalInit == nullptr) {
     WARN("lib wrapper not initialized.");
     return ncclLibWrapperNotSet;
   }
