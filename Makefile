@@ -20,7 +20,7 @@ NVCC ?= $(CUDA_HOME)/bin/nvcc
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Darwin)
-	CUDA_LIB = $(CUDA_HOME)/lib
+CUDA_LIB = $(CUDA_HOME)/lib
 endif
 
 NVCC_GENCODE ?= -gencode=arch=compute_35,code=sm_35 \
@@ -36,7 +36,7 @@ NVCUFLAGS  := -ccbin $(CXX) $(NVCC_GENCODE) -lineinfo -std=c++11 -maxrregcount 9
 LDFLAGS    := $(addprefix -L,${CUDA_LIB}) -lcudart
 
 ifeq ($(UNAME), Linux)
-	LDFLAGS += -lrt
+LDFLAGS += -lrt
 endif
 
 ifeq ($(DEBUG), 0)
@@ -67,10 +67,12 @@ NCCL_MINOR   := 3
 NCCL_PATCH   := 5
 CXXFLAGS  += -DNCCL_MAJOR=$(NCCL_MAJOR) -DNCCL_MINOR=$(NCCL_MINOR) -DNCCL_PATCH=$(NCCL_PATCH)
 
-CUDA_VERSION ?= $(shell ls $(CUDA_LIB)/libcudart.so.* | head -1 | rev | cut -d "." -f -2 | rev)
+
 
 ifeq ($(UNAME), Darwin)
 CUDA_VERSION = $(shell $(NVCC) --version | tail -1 | sed "s/.*, V//")
+else
+CUDA_VERSION ?= $(shell ls $(CUDA_LIB)/libcudart.so.* | head -1 | rev | cut -d "." -f -2 | rev)
 endif
 
 CUDA_MAJOR = $(shell echo $(CUDA_VERSION) | cut -d "." -f 1)
@@ -82,7 +84,11 @@ CXXFLAGS  += -DCUDA_MAJOR=$(CUDA_MAJOR) -DCUDA_MINOR=$(CUDA_MINOR)
 
 INCEXPORTS  := nccl.h
 LIBSRCFILES := libwrap.cu core.cu all_gather.cu all_reduce.cu broadcast.cu reduce.cu reduce_scatter.cu
+ifeq ($(UNAME), Darwin)
+LIBNAME     := libnccl.dylib
+else
 LIBNAME     := libnccl.so
+endif
 STATICLIBNAME := libnccl_static.a
 
 INCDIR := $(BUILDDIR)/include
@@ -93,15 +99,19 @@ INCTARGETS := $(patsubst %, $(INCDIR)/%, $(INCEXPORTS))
 LIBSONAME  := $(patsubst %,%.$(NCCL_MAJOR),$(LIBNAME))
 LIBTARGET  := $(patsubst %,%.$(NCCL_MAJOR).$(NCCL_MINOR).$(NCCL_PATCH),$(LIBNAME))
 STATICLIBTARGET := $(STATICLIBNAME)
+ifeq ($(UNAME), Darwin)
+LIBLINK    := $(patsubst lib%.dylib, -l%, $(LIBNAME))
+else
 LIBLINK    := $(patsubst lib%.so, -l%, $(LIBNAME))
+endif
 LIBOBJ     := $(patsubst %.cu, $(OBJDIR)/%.o, $(filter %.cu, $(LIBSRCFILES)))
 DEPFILES   := $(patsubst %.o, %.d, $(LIBOBJ)) $(patsubst %, %.d, $(TESTBINS)) $(patsubst %, %.d, $(MPITESTBINS))
 
 CXX_IS_CLANG = $(shell $(CXX) --version | grep "clang" | wc -l)
 ifneq ($(strip $(CXX_IS_CLANG)), 0)
-	LINK_SHARED_STRING = 
+LINK_SHARED_STRING = 
 else
-	LINK_SHARED_STRING = -Wl,--no-as-needed -Wl,-soname,$(LIBSONAME)
+LINK_SHARED_STRING = -Wl,--no-as-needed -Wl,-soname,$(LIBSONAME)
 endif
 
 all : lib staticlib
