@@ -96,12 +96,14 @@ LIBDIR := $(BUILDDIR)/lib
 OBJDIR := $(BUILDDIR)/obj
 
 INCTARGETS := $(patsubst %, $(INCDIR)/%, $(INCEXPORTS))
-LIBSONAME  := $(patsubst %,%.$(NCCL_MAJOR),$(LIBNAME))
-LIBTARGET  := $(patsubst %,%.$(NCCL_MAJOR).$(NCCL_MINOR).$(NCCL_PATCH),$(LIBNAME))
 STATICLIBTARGET := $(STATICLIBNAME)
 ifeq ($(UNAME), Darwin)
+LIBSONAME  := $(patsubst %.dylib,%.$(NCCL_MAJOR).dylib,$(LIBNAME))
+LIBTARGET  := $(patsubst %.dylib,%.$(NCCL_MAJOR).$(NCCL_MINOR).$(NCCL_PATCH).dylib,$(LIBNAME))
 LIBLINK    := $(patsubst lib%.dylib, -l%, $(LIBNAME))
 else
+LIBSONAME  := $(patsubst %,%.$(NCCL_MAJOR),$(LIBNAME))
+LIBTARGET  := $(patsubst %,%.$(NCCL_MAJOR).$(NCCL_MINOR).$(NCCL_PATCH),$(LIBNAME))
 LIBLINK    := $(patsubst lib%.so, -l%, $(LIBNAME))
 endif
 LIBOBJ     := $(patsubst %.cu, $(OBJDIR)/%.o, $(filter %.cu, $(LIBSRCFILES)))
